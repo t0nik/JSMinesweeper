@@ -1,4 +1,3 @@
-
 "use strict";
 /*tslint:disabled*/
 
@@ -63,6 +62,7 @@ const gameTypeSafe = document.getElementById("gameTypeSafe");
 const gameTypeZero = document.getElementById("gameTypeZero");
 const switchButton = document.getElementById("switchButton");
 const analysisButton = document.getElementById("AnalysisButton");
+const probabilityButton = document.getElementById("probabilityButton");
 const messageBar = document.getElementById("messageBar");
 const messageLine = document.getElementById("messageLine");
 const messageBarBottom = document.getElementById("messageBarBottom");
@@ -76,6 +76,7 @@ const docTileSize = document.getElementById("tilesize");
 const docFastPlay = document.getElementById("fastPlay");
 const docNgMode = document.getElementById("noGuessMode");
 const docHardcore = document.getElementById("hardcore");
+const docProbability = document.getElementById("probability");
 const docOverlay = document.getElementById("overlay");
 const docAnalysisParm = document.getElementById("analysisParm");
 
@@ -151,6 +152,9 @@ function visibilityChange() {
 
     return "";
 }
+
+// Probability function running check
+let doProbabilityRunning = false;
 
 
 // things to do to get the game up and running
@@ -666,7 +670,7 @@ function setPageTitle() {
         }
 
     } else {
-        title.innerHTML = "Minesweeper player"; // change the title
+        title.innerHTML = "Minesweeper player + probability"; // change the title
     }
 
     document.title = title.innerHTML;
@@ -675,9 +679,9 @@ function setPageTitle() {
 // render an array of tiles to the canvas
 function renderHints(hints, otherActions, drawOverlay) {
 
-    if (drawOverlay == null) {
-        drawOverlay = (docOverlay.value != "none")
-    }
+    // if (drawOverlay == null ) {
+    //     drawOverlay = (docOverlay.value != "none")
+    // }
 
     //console.log(hints.length + " hints to render");
     //ctxHints.clearRect(0, 0, canvasHints.width, canvasHints.height);
@@ -719,8 +723,8 @@ function renderHints(hints, otherActions, drawOverlay) {
 
     }
 
-     // put percentage over the tile 
-    if (drawOverlay) {
+        // put percentage over the tile only if the setting is enabled
+        if (drawOverlay){ //&& docProbability.checked) {
 
         if (TILE_SIZE == 12) {
             ctxHints.font = "7px serif";
@@ -766,6 +770,7 @@ function renderHints(hints, otherActions, drawOverlay) {
             }
         }
     }
+    
 
 
     if (otherActions == null) {
@@ -1292,6 +1297,7 @@ function loadReplayData(file) {
 
         // enable the analysis button - it might have been previous in an invalid layout
         analysisButton.disabled = false;
+        probabilityButton.disabled = false;
 
     };
 
@@ -1546,8 +1552,12 @@ function keyPressedEvent(e) {
         if (!analysisButton.disabled) {  // don't allow the hotkey if the button is disabled
             doAnalysis();
         }
-
-    } else if (analysisMode) {
+    } else if (e.key == 'p') {
+        if (!probabilityButton.disabled) {
+            doProbability();
+        }
+    }
+    else if (analysisMode) {
         if (e.key == 'l') {   // 'L'
             lockMineCount.checked = !lockMineCount.checked;
         } else if (e.key == '0') {
@@ -1811,7 +1821,7 @@ async function replayForward(replayType) {
         }
 
         // only show the percentages if we are about to break
-        window.requestAnimationFrame(() => renderHints(hints, other, doBreak));
+         window.requestAnimationFrame(() => renderHints(hints, other, doBreak));
 
         if (replayStep != size) {
             const nextStep = replayData.replay[replayStep];
@@ -2097,11 +2107,12 @@ async function doAnalysis() {
             options.playStyle = PLAY_STYLE_NOFLAGS_EFFICIENCY; 
         } 
 
-        if (docOverlay.value != "none") {
-            options.fullProbability = true;
-        } else {
-            options.fullProbability = false;
-        }
+        options.fullProbability = true;
+        // if (docOverlay.value != "none") {
+        //     options.fullProbability = true;
+        // } else {
+        //     options.fullProbability = false;
+        // }
 
         options.guessPruning = guessAnalysisPruning;
         options.fullBFDA = true;
@@ -2110,8 +2121,7 @@ async function doAnalysis() {
         const hints = solve.actions;
 
         justPressedAnalyse = true;
-
-        window.requestAnimationFrame(() => renderHints(hints, solve.other));
+        window.requestAnimationFrame(() => renderHints(hints, solve.other, true));
 
         // show the next tile to be clicked if in replay mode
         if (analysisMode && replayMode) {
@@ -2127,7 +2137,23 @@ async function doAnalysis() {
     // by delaying removing the logical lock we absorb any secondary clicking of the button / hot key
     setTimeout(function () { canvasLocked = false; }, 200);
     //canvasLocked = false;
+}
 
+async function doProbability() {
+
+    const options = {};
+        if (docPlayStyle.value == "flag") {
+            options.playStyle = PLAY_STYLE_FLAGS;
+        } else if (docPlayStyle.value == "noflag") {
+            options.playStyle = PLAY_STYLE_NOFLAGS;
+        } else if (docPlayStyle.value == "eff") {
+            options.playStyle = PLAY_STYLE_EFFICIENCY;
+        } else {
+            options.playStyle = PLAY_STYLE_NOFLAGS_EFFICIENCY; 
+        } 
+    // const solve = await solver(board, options);
+
+    window.requestAnimationFrame(() => renderHints([], [], true));
 }
 
 async function checkBoard() {

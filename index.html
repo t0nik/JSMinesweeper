@@ -14,7 +14,7 @@
     <!-- Title at the top -->
     <h1 id="headerPanel" style="position: absolute; left: 0px; top: 0px; height: 50px; right: 0px; overflow-y: auto;">
         <button type="button" style="zoom: 0.9;" id="switchButton" onclick="setAnalysis()">Switch to Analyser</button>
-        <label id="title" style="font-size: 36px; vertical-align: middle;">Minesweeper player</label>
+        <label id="title" style="font-size: 36px; vertical-align: middle;">Minesweeper player + probability</label>
         <label style="float: right; padding-right: 10px;">
             <a href="https://github.com/DavidNHill/JSMinesweeper#readme" target="_blank"><i>help</i></a>
         </label>
@@ -36,6 +36,7 @@
                 <label><input type="checkbox" class="checkbox" id="noGuessMode" /> <span>No Guess</span></label>
                 <label><input type="checkbox" class="checkbox" id="fastPlay" /> <span>Fast mode</span></label>
                 <label><input type="checkbox" class="checkbox" id="hardcore" /> <span>Hard Core</span></label>
+                <label><input type="checkbox" class="checkbox" id="probability" /> <span>Enable Probabilities</span></label>
             </div>
         </div>
 
@@ -95,7 +96,7 @@
         </div>
 
         <div style="margin-top: 1em;" class="checkboxes" id="play1">
-            <label><input type="checkbox" class="checkbox" id="showhints" checked /> <span>Show hints</span></label>
+            <label><input type="checkbox" class="checkbox" id="showhints" /> <span>Show hints</span></label>
             <label><input type="checkbox" class="checkbox" id="autoplay" /> <span>Auto play</span></label>
             <label><input type="checkbox" class="checkbox" id="acceptguesses" /> <span>Accept guesses</span></label>
 
@@ -104,7 +105,7 @@
         <div style="margin-top: 10px;">
             <label>Overlay:</label>
             <select id="overlay">
-                <option value="none">None</option>
+                <!-- <option value="none">None</option> -->
                 <option value="safety">Safety %</option>
                 <option value="mine" selected>Mine %</option>
             </select>
@@ -115,7 +116,9 @@
             <label><input type="checkbox" class="checkbox" id="lockMineCount" /> <span><u>L</u>ock mine count</span></label>
         </div>
 
+        <button type="button" style="margin-top: 1em;" id="probabilityButton" onclick="doProbability()"><u>P</u>robability</button>
         <button type="button" style="margin-top: 1em;" id="AnalysisButton" onclick="doAnalysis()"><u>A</u>nalyse</button>
+        
 
         <div style="margin-top: 5px;">
             <label>URL parm:</label>
@@ -132,11 +135,11 @@
     <!--
     style="display: block; position: absolute; left: 170px; right: 0px; top: 60px; bottom: 60px;"
     -->
-    <div id="wholeboard" style="display: flex; flex-direction: column; position: absolute; left: 170px; right: 0px; top: 60px; bottom: 60px;">
-        <div class="tooltip" id="canvas" style="position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px;">
+    <div id="wholeboard" class="tooltip" style="display: flex; flex-direction: column; position: absolute; left: 170px; right: 0px; top: 10%; bottom: 60px;">
+        <div  id="canvas" style="position: absolute; left: 50%; top: 0px; bottom: 0px; right: 0px;">
 
             <!-- the board header with mine count and some buttons -->
-            <div id="display" style="display: flex; flex-direction: row; height: 50px;">
+            <div id="display" style="position: relative; left: -50%; display: flex; flex-direction: row; height: 50px;">
                 <div>
                     <canvas class="led" id="myMinesLeft" style="position: relative; left: 3px; top:3px; width: 60px; height: 36px" oncontextmenu="return false"></canvas>
                     <input type="image" src='resources/images/flaggedWrong_thin.png' id="leftClickFlag" onclick="doToggleFlag()" style="position: relative; left: 20px; top: 2px; width: 40px; height: 40px;"/>
@@ -150,12 +153,10 @@
             </div>
 
             <!-- the canvas with the mines on it and one with the the hints -->
-            <div id="board" style="overflow: auto; position: relative; top:0px; left:0px;">
+            <div id="board" style="overflow: auto; position: relative; top:0px; left:-50%;">
                 <canvas id="myCanvas" width="500" height="500" oncontextmenu="return false" style="position: absolute; top: 0px; left: 0px;"></canvas>
                 <canvas id="myHints" width="500" height="500" oncontextmenu="return false" style="position: absolute; top: 0px; left: 0px; pointer-events: none;"></canvas>
             </div>
-
-            <span id="tooltip" class="tooltiptext" style="pointer-events: none;"></span>
 
             <!-- message line at the bottom -->
             <div id="messageBar" class="hidden">
@@ -177,6 +178,7 @@
             -->
 
         </div>
+        <span id="tooltip" class="tooltiptext" style="pointer-events: none;"></span>
     </div>
 
     <div id="messageBarBottom">
